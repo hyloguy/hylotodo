@@ -8,3 +8,4 @@ Features:
 
 * Delete items
 
+* Complete items

@@ -7,6 +7,7 @@
 <ul>
 	<%@todos.each do |todo| %>
 	<li>
+		<input type="checkbox" <%= todo.completed ? 'checked="checked" disabled' : '' %>/>
 		<%=todo.name%> <span>&times;</span>
 		<span style="display:none"><%=todo.id%></span>
 	</li>
@@ -51,8 +52,8 @@ $('#btn_add_todo').click(function(){
 	// the item was successfully added to the todos table in the database,
 	// so add it to the list in the browser.
 	response.done(function(data){
-		// console.log("DONE FUNCTION");
-		$('ul').append('<li>' + data.name 
+		$('ul').append('<li><input type="checkbox" /> '
+			+ data.name 
 			+ ' <span>&times;</span><span style="display:none">'
 			+ data.id + '</span></li>');
 		console.log(data);
@@ -61,7 +62,6 @@ $('#btn_add_todo').click(function(){
 	// If the status code of the response is an error code, or "fail",
 	// then we know that the data we sent was rejected for some reason.
 	response.fail(function(data){
-		console.log("FAIL FUNCTION");
 		$('h4').append("<p> There was an error saving your todo</p>");
 	});
 });
@@ -77,9 +77,36 @@ $(function() {
   	if (target.is('span')) {
   		deleteItem(target)
   	}
+  	if (target.is('input')) {
+  		if (target.prop('checked')) {
+  			completeItem(target);
+  		}
+  	}
   });
 
 });
+
+var completeItem = function(checkbox) {
+	var id = checkbox.next().next().text();
+	console.log("Now completing item number: " + id);
+
+	var response = $.ajax({
+		url: "/todos/" + id + "/complete",
+		type: "POST",
+		data: {},
+		dataType: "json"
+	});
+
+	response.done(function() {
+		checkbox.prop('disabled', true);
+		console.log("Task completed!");
+	});
+
+	response.fail(function() {
+		$('h4').append("<p> There was an error completing your todo</p>");
+	});
+}
+
 
 var deleteItem = function(span) {
 	var id = span.next().text();
@@ -99,7 +126,6 @@ var deleteItem = function(span) {
 	response.fail(function() {
 		$('h4').append("<p> There was an error deleting your todo</p>");
 	});
-	
 }
 
 </script>

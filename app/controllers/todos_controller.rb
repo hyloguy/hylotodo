@@ -1,10 +1,13 @@
 class TodosController < ApplicationController
-	before_action :set_todo, only: [:destroy]
+	before_action :set_todo, only: [:destroy, :complete]
 
 
 
   def index
   	@todos = Todo.all
+  end
+
+  def edit
   end
 
   def create
@@ -25,6 +28,18 @@ class TodosController < ApplicationController
   	respond_to do |format|
   		format.html { redirect_to todos_path }
   		format.json { head :no_content }
+  	end
+  end
+
+  def complete
+  	respond_to do |format|
+  		if @todo.update(completed: true)
+  			format.html { redirect_to @todo, notice: 'Task successfully completed.' }
+  			format.json { render json: @todo }
+  		else
+  			format.html { render :edit }
+  			format.json { render json: @todo.errors, status: :unprocessable_entity }
+  		end
   	end
   end
 
