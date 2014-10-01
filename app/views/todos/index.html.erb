@@ -1,2 +1,105 @@
-<h1>Todos#index</h1>
-<p>Find me in app/views/todos/index.html.erb</p>
+<h1>Todo List</h1>
+<h4 style="display:none"></h4>
+
+<input type="text">
+<button id="btn_add_todo">Add Todo</button>
+
+<ul>
+	<%@todos.each do |todo| %>
+	<li>
+		<%=todo.name%> <span>&times;</span>
+		<span style="display:none"><%=todo.id%></span>
+	</li>
+	<% end %>
+</ul>
+
+
+
+<script type="text/javascript">
+
+// HELP: PLEASE EXPLAIN WHY the code below works when it is here in this file,
+// but does NOT work when I put it in application.js instead?
+// I KNOW application.js is automatically included -- I can see it in the Chrome
+// Developer Console, with my code inside; it just isn't DOING anything. Why?
+// (Note: I tried putting it in application.js after putting it in a separate file
+// in the javascripts folder called todos.js. That didn't work either.)
+
+$('#btn_add_todo').click(function(){
+
+	// Store user's input as textBoxValue
+	var textBoxValue = $('input').val();
+
+	// Format the input in the way the controller will expect to see it in params
+	data_hash = {
+		"todo":{"name": textBoxValue}
+	}
+
+	// Clear the input box
+	$('input').val('');
+
+	// Use AJAX to send a POST request to /todos,
+	// which will be routed to todos#create.
+	// Store the jqXHR object containing the server's response as "response".
+	var response = $.ajax({
+		url: "/todos",
+		type: "POST",
+		data: data_hash,
+		dataType: "json"
+	});
+
+	// If the status code of the response is OK, or "done", then we know that
+	// the item was successfully added to the todos table in the database,
+	// so add it to the list in the browser.
+	response.done(function(data){
+		// console.log("DONE FUNCTION");
+		$('ul').append('<li>' + data.name 
+			+ ' <span>&times;</span><span style="display:none">'
+			+ data.id + '</span></li>');
+		console.log(data);
+	});
+
+	// If the status code of the response is an error code, or "fail",
+	// then we know that the data we sent was rejected for some reason.
+	response.fail(function(data){
+		console.log("FAIL FUNCTION");
+		$('h4').append("<p> There was an error saving your todo</p>");
+	});
+});
+
+$(function() {
+
+	// Use delegation to find out if user clicked on an 'x'
+	// Note that event.target must be re-wrapped as jQuery object
+	// in order to call the is() function/method on it.
+  $('ul').on('click', function(e) {
+  	console.dir(e.target);
+  	var target = $( event.target );
+  	if (target.is('span')) {
+  		deleteItem(target)
+  	}
+  });
+
+});
+
+var deleteItem = function(span) {
+	var id = span.next().text();
+	console.log("Now removing item number: " + id);
+
+	var response = $.ajax({
+		url: "/todos/" + id,
+		type: "POST",
+		data: {"_method":"delete"},
+		dataType: "json"
+	});
+
+	response.done(function() {
+		span.parent().remove();
+	});
+
+	response.fail(function() {
+		$('h4').append("<p> There was an error deleting your todo</p>");
+	});
+	
+}
+
+</script>
